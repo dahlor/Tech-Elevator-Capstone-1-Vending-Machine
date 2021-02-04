@@ -41,5 +41,9 @@ public class Slot {
 		this.itemQuant = itemQuant;
 	}
 	
+	public String getItemName() {
+		return newItem.getItemName();
+	}
+	
 	
 }

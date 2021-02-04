@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -170,9 +171,11 @@ public class VendingMachineCLI {
  * Methods used to perform processing
  * @throws FileNotFoundException 
  ********************************************************************************************************/
-	public void displayItems() {      // static attribute used as method is not associated with specific object instance
-		System.out.println(Arrays.asList(itemMap));
+	public void displayItems() {   // static attribute used as method is not associated with specific object instance
+		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
+			System.out.println(loopy.getValue().getItemName() +"|" + loopy.getValue().getItemQuant());
 		}
+	}
 	
 	public void purchaseItems() {	 // static attribute used as method is not associated with specific object instance
 		// Code to purchase items from Vending Machine
@@ -184,7 +187,8 @@ public class VendingMachineCLI {
 	}
 	
 	public void salesReport() {
-		// Process and print out a sales report to SalesReport.txt
+		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) 
+			System.out.println(loopy.getValue().getItemName() +"|" + loopy.getValue().getItemQuant());
 	}
 	
 	
