@@ -1,6 +1,10 @@
 package com.techelevator;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
@@ -19,9 +23,10 @@ import java.util.Scanner;
 import com.techelevator.view.Menu;         // Gain access to Menu class provided for the Capstone
 
 public class VendingMachineCLI {
-
-    // Main menu options defined as constants
-
+	
+	// Instantiate the Map of Everything.
+	Map<String,Slot> itemMap = new HashMap<String,Slot>();
+	
 	private static final String MAIN_MENU_OPTION_DISPLAY_ITEMS = "Display Vending Machine Items";
 	private static final String MAIN_MENU_OPTION_PURCHASE      = "Purchase";
 	private static final String MAIN_MENU_OPTION_EXIT          = "Exit";
@@ -42,18 +47,11 @@ public class VendingMachineCLI {
 	
 	private Menu vendingMenu;              // Menu object to be used by an instance of this class
 	
-	public VendingMachineCLI(Menu menu) {  // Constructor - user will pas a menu for this class to use
-		this.vendingMenu = menu;           // Make the Menu the user object passed, our Menu
-		
-	// Getting all of our ducks in a row.
 	
-	// If a Log.txt exists, it will delete it, so we start fresh every time.
-	File checkLogFile = new File("./Log.txt");
-	if (checkLogFile.exists()) {
-		checkLogFile.delete();
-		}	
-		
-	}
+	public VendingMachineCLI(Menu menu) {  // Constructor - user will pass a menu for this class to use
+		this.vendingMenu = menu;           // Make the Menu the user object passed, our Menu		
+		}
+	
 	/**************************************************************************************************************************
 	*  VendingMachineCLI main processing loop
 	*  
@@ -65,14 +63,51 @@ public class VendingMachineCLI {
 	*  should be coded
 	*
 	*  Methods should be defined following run() method and invoked from it
+	 * @throws FileNotFoundException 
 	*
 	***************************************************************************************************************************/
 	
-	// Instantiate the itemMap. Important stuff right here.
-	// Sad, lonely, bastard map of EVERYTHING. Don't forget about it.
-	Map<String,Slot> itemMap = new HashMap<String,Slot>();
-	
-	public void run() {
+	public void run() throws FileNotFoundException {
+		
+		// Sneaky sneaky, Frank.
+		
+		// Code to display items in Vending Machine
+		File checkLogFile = new File("./Log.txt");
+		if (checkLogFile.exists()) {
+		checkLogFile.delete();
+		}
+		
+		
+		//Getting all that data in the system.
+		File aFile = new File("./vendingmachine.csv");
+		Scanner inputDataFile = new Scanner(aFile);
+		
+		// Define variables to hold data from file
+
+		while(inputDataFile.hasNext()) {	
+		String aLine = inputDataFile.nextLine();
+			
+		// Slice and dice into String array.
+		String[] valuesInLine = aLine.split("\\|");
+			
+		// Turning String array into manipulatable variables.
+		String slotLocation = valuesInLine[0];
+		String itemName = valuesInLine[1];
+		double itemPrice = Double.parseDouble(valuesInLine[2]);
+		String itemType = valuesInLine[3];
+			
+		// Creating a new item with all of our parsed information.
+		Item newItem = new Item(itemName, itemPrice, itemType);
+		Slot newSlot = new Slot(newItem, 5);
+			
+		// Put all of this into a sexy HashMap
+		itemMap.put(slotLocation, newSlot);
+		}
+		
+		realRun();
+	}
+
+	public void realRun() {
 
 		boolean shouldProcess = true;         // Loop control variable
 		
@@ -103,7 +138,7 @@ public class VendingMachineCLI {
 		return;                               // End method and return to caller
 	}
 	
-	public void runPurchase() {
+	public void runPurchaseMenu(){
 
 		boolean shouldProcess = true;         // Loop control variable
 		
@@ -133,14 +168,15 @@ public class VendingMachineCLI {
 	}
 /********************************************************************************************************
  * Methods used to perform processing
+ * @throws FileNotFoundException 
  ********************************************************************************************************/
 	public void displayItems() {      // static attribute used as method is not associated with specific object instance
-		// Code to display items in Vending Machine
-	}
+		System.out.println(Arrays.asList(itemMap));
+		}
 	
 	public void purchaseItems() {	 // static attribute used as method is not associated with specific object instance
 		// Code to purchase items from Vending Machine
-		runPurchase();
+		runPurchaseMenu();
 	}
 	
 	public void endMethodProcessing() { // static attribute used as method is not associated with specific object instance
@@ -163,36 +199,7 @@ public class VendingMachineCLI {
 // Methods we added ourselves that the user will never see.
 
 	// Loading the Vending Machine stock file & converting to Array/HashMap.
-	private void loadFile() throws FileNotFoundException {
-		File aFile = new File("./vendingmachine.csv");	// Define a File object for the file
-		Scanner inputDataFile = new Scanner(aFile);
-		
-		// Define variables to hold data from file
-		String slotLocation = "";
-		String itemName = "";
-		String itemType = "";
-		Double itemPrice = 0.00;
 
-		while(inputDataFile.hasNext()) {	
-		String aLine = inputDataFile.nextLine();
-			
-		// Slice and dice into String array.
-		String[] valuesInLine = aLine.split("|");
-			
-		// Turning String array into manipulatable variables.
-		slotLocation = valuesInLine[0];
-		itemName = valuesInLine[1];
-		itemPrice = Double.parseDouble(valuesInLine[2]);
-		itemType = valuesInLine[3];
-			
-		// Creating a new item with all of our parsed information.
-		Item newItem = new Item(itemName, itemPrice, itemType);
-		Slot newSlot = new Slot(newItem, 5);
-			
-		// Put all of this into a sexy HashMap
-		itemMap.put(slotLocation, newSlot);
-		}
-	}
 	
 	
 }
