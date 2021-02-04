@@ -12,8 +12,7 @@ public class Slot {
 		itemQuant = 0;
 	}
 	
-	public Slot(String slotNumber, Item newItem, int itemQuant) {
-		this.slotNumber = slotNumber;
+	public Slot(Item newItem, int itemQuant) {
 		this.newItem = newItem;
 		this.itemQuant = itemQuant;
 	}
