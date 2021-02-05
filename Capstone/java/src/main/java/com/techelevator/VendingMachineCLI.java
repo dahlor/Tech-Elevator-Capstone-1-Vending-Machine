@@ -292,12 +292,12 @@ public class VendingMachineCLI {
 
 		// Making sure the entered slot exists.
 		if (itemMap.containsKey(itemSlot)){ //<--- This is phrased wrong, but you know what it's supposed to be.
-
-			//If you have the money...
-			if ( <= getBalance()){
 				
+			//If you have the money...
+			if (itemMap.get(itemSlot).getNewItem().getItemPrice() <= getBalance()){
+			
 				//If it's in stock...
-				if (slotLocation.itemStock() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.	
+				if (itemMap.get(itemSlot).getItemQuant() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.	
 				
 					// Instantiates the log file and flags for appended writing
 					FileWriter itemWriter = new FileWriter("./Log.txt", true);
@@ -306,29 +306,32 @@ public class VendingMachineCLI {
 				
 					// The inventory part
 					//!!!!!!!!!! DOUBLE CHECK THIS SHIT!!!!!!!!
-					itemMap.put(slotLocation, newSlot.get(newSlot.quantity()) - 1);
+					
+					itemMap.get(itemSlot).setItemQuant(itemMap.get(itemSlot).getItemQuant() - 1);
 							
 					
 					// Subtract the item price from the balance.
-					setBalance() = (getBalance()-itemPrice);
+					double balanceMath = getBalance() - itemMap.get(itemSlot).getNewItem().getItemPrice();
+					setBalance(balanceMath);
 							
 					// Add to total sales.
-					setTotalSales() = (getTotalSales() + itemPrice);
+					double calcTotalSales = getTotalSales() - itemMap.get(itemSlot).getNewItem().getItemPrice();
+					setTotalSales(calcTotalSales);
 					
 					//Print the transaction to the console.
-					System.out.println("Your "+itemName+" has been dispensed. It cost $"+itemPrice+". Your remaining balance is $"+getBalance()+"\n");
+					System.out.println("Your "+ itemMap.get(itemSlot).getItemName() +" has been dispensed. It cost $"+itemMap.get(itemSlot).getNewItem().getItemPrice()+". Your remaining balance is $"+getBalance()+"\n");
 				
 					//Audit Log the time, item purchased, slot #, price, and remaining balance.
-					printItemWriter.println(dateTime()+" "+itemName+" "+slotLocation+" $"+itemPrice+" $"+getBalance());
+					printItemWriter.println(dateTime()+" "+itemMap.get(itemSlot).getItemName() +" "+ itemSlot +" $"+ itemMap.get(itemSlot).getNewItem().getItemPrice() +" $"+getBalance());
 					
 						//Response Plinko.
-						if (itemType == "chip"){
+						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Chip"){
 								System.out.println("Crunch Crunch, Yum!\n");
 						}
-						if (itemType == "candy"){
+						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Candy"){
 							System.out.println("Munch Munch, Yum!\n");
 						}
-						if (itemType == "drink"){
+						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Drink"){
 							System.out.println("Glug Glug, Yum!\n");
 						}
 						else { 
