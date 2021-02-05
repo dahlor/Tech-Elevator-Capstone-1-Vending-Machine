@@ -7,10 +7,9 @@ import java.io.PrintWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.TreeMap;
 
 /**************************************************************************************************************************
 *  This is your Vending Machine Command Line Interface (CLI) class
@@ -27,9 +26,11 @@ import com.techelevator.view.Menu;         // Gain access to Menu class provided
 
 public class VendingMachineCLI {
 	
+	// Here we go...
+	
 	// Instantiate the Map of Everything.
-	Map<String,Slot> itemMap = new HashMap<String,Slot>();
-
+	TreeMap<String,Slot> itemMap = new TreeMap<String,Slot>();
+	
 	// Money variables, getter, and setter.
 	private double balance;
 	private double totalSales;
@@ -93,15 +94,18 @@ public class VendingMachineCLI {
 	
 	public void run() throws IOException {
 		
-		// Sneaky sneaky, Frank.
-		// I've hijacked your naming to inject the code that I wanted to run first.
-		// Pfbtttbtbtbttbtbtbtbt.
+		// Delete previous log.
+		 File lastLog = new File("./Log.txt");
+		 if (lastLog.exists()){
+		     lastLog.delete();
+		 }  
 		
 		//Getting all that data in the system.
 		File aFile = new File("./vendingmachine.csv");
+		@SuppressWarnings("resource")
 		Scanner inputDataFile = new Scanner(aFile);
 		
-		// Define variables to hold data from file
+		// Define variables to hold data from file.
 
 		while(inputDataFile.hasNext()) {	
 		String aLine = inputDataFile.nextLine();
@@ -119,7 +123,7 @@ public class VendingMachineCLI {
 		Item newItem = new Item(itemName, itemPrice, itemType);
 		Slot newSlot = new Slot(newItem, 5);
 			
-		// Put all of this into a sexy HashMap
+		// Put all of this into a sexy TreeMap. (For ordered display. We spared no expense.)
 		itemMap.put(slotLocation, newSlot);
 		}
 		
@@ -127,10 +131,10 @@ public class VendingMachineCLI {
 		setBalance(0);
 		setTotalSales(0);
 		
-		realRun();
+		mainRun();
 	}
 
-	public void realRun() throws IOException {
+	public void mainRun() throws IOException {
 
 		boolean shouldProcess = true;         // Loop control variable
 		
@@ -200,7 +204,7 @@ public class VendingMachineCLI {
 		}
 	}
 	
-	public void purchaseItems() throws IOException {	 // static attribute used as method is not associated with specific object instance
+	public void purchaseItems() throws IOException {  // static attribute used as method is not associated with specific object instance
 		// Code to purchase items from Vending Machine
 		runPurchaseMenu();
 	}
@@ -210,7 +214,7 @@ public class VendingMachineCLI {
 	}
 	
 	public void salesReport() throws IOException {
-		String salesWriter = new SimpleDateFormat("yyyy-MM-dd-HH.mm'.txt'").format(new Date());
+		String salesWriter = new SimpleDateFormat("'Sales Report 'yyyy-MM-dd-HH.mm.ss'.txt'").format(new Date());
 		PrintWriter printItemWriter = new PrintWriter(salesWriter);
 		System.out.println("\nPrinting sales report...");
 	for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
@@ -221,13 +225,12 @@ public class VendingMachineCLI {
 		printItemWriter.close();
 	}
 	
-	
 	/****************
 	 * PURCHASE MENU
 	 * @throws IOException 
 	 ****************/
 	
-	@SuppressWarnings("resource") //lol
+	@SuppressWarnings("resource")
 	public void feedMoney() throws IOException {
 		System.out.println("\nPlease type how much cash your would like to insert. (Only $1, $2, $5, and $10 bills accepted.)");
         Scanner cashScanner = new Scanner(System.in);
@@ -240,21 +243,19 @@ public class VendingMachineCLI {
         }
        }
 	
-	
 	public void selectProduct() throws IOException {
 		System.out.println("");
 		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
 			System.out.println(loopy.getKey()+"|"+loopy.getValue().getItemName());
 		}
 		System.out.println("\nPlease type the number and letter for the item you would like to purchase.");
-        Scanner slotScanner = new Scanner(System.in);
+        @SuppressWarnings("resource")
+		Scanner slotScanner = new Scanner(System.in);
         String slotSelection = slotScanner.nextLine().toUpperCase();
 		itemPurchase(slotSelection);
 	}
-
 	
 	public void finishTransaction() throws IOException {
-		
 		System.out.println("\nCHANGE DISPENSING...\n");
 		System.out.println("Your change is $"+String.format("%.2f", getBalance())+".\n");
 		System.out.println("This will be returned to you as " + returnChange()+".");
@@ -269,9 +270,7 @@ public class VendingMachineCLI {
 		// Change has been returned, so... 
 		setBalance(0.00);
 	}
-	
-// Methods we added ourselves that the user will never see.
-	
+		
 	// Date and time formatted as requested.
 	public static String dateTime() {
 		DateFormat dateFormat2 = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
@@ -284,17 +283,15 @@ public class VendingMachineCLI {
 	public void itemPurchase(String itemSlot) throws IOException {
 
 		// Making sure the entered slot exists.
-		if (itemMap.containsKey(itemSlot)){ //<--- This is phrased wrong, but you know what it's supposed to be.
+		if (itemMap.containsKey(itemSlot)){
 				
 			//If you have the money...
 			if (itemMap.get(itemSlot).getNewItem().getItemPrice() <= getBalance()){
 			
 				//If it's in stock...
-				if (itemMap.get(itemSlot).getItemQuant() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.		
+				if (itemMap.get(itemSlot).getItemQuant() > 0) {
 				
 					// The inventory part
-					//!!!!!!!!!! DOUBLE CHECK THIS SHIT!!!!!!!!
-					
 					itemMap.get(itemSlot).setItemQuant(itemMap.get(itemSlot).getItemQuant() - 1);
 							
 					
@@ -316,7 +313,7 @@ public class VendingMachineCLI {
 					saleItemWriter.println(dateTime()+" "+itemMap.get(itemSlot).getItemName() +" "+itemSlot +" $"+String.format("%.2f", itemMap.get(itemSlot).getNewItem().getItemPrice())+" $"+String.format("%.2f", getBalance()));
 					saleItemWriter.close();
 					
-						//Response Plinko.
+						// R E S P O N S E  P L I N K O !
 						if (itemMap.get(itemSlot).getNewItem().getItemType().equals("Chip")){
 								System.out.println("\nCrunch Crunch, Yum!");
 						}
@@ -336,14 +333,13 @@ public class VendingMachineCLI {
 					}
 				} else {
 				//...you don't have the money.
-				System.out.println("Not enough money has been inserted to make this purchase.\n");
+				System.out.println("\nNot enough money has been inserted to make this purchase.\n");
 				}
 			} else {
-			// User had a stroke and typed in some bullshit.
-			System.out.println(itemSlot + " is not a valid choice. Please try again.\n");
+			// User had a stroke.
+			System.out.println("\n"+itemSlot+" is not a valid choice. Please try again.\n");
 		}
 	}
-	
 	
 	// When money is inserted.
 	public void insertMoney(int moneyFed) throws IOException {
@@ -364,22 +360,18 @@ public class VendingMachineCLI {
 	System.out.println("Invalid dollar amount entered. Please try again.");
 	}
 	
-	
 	// Change return calculator.
 	public String returnChange() {
 
-	      // define variables for coins
 	      double quarter = 0.25;
 	      double nickel = 0.05;
 	      double dime = 0.10;
 	      
-	      // round changeDue to 2 decimal places and calculate the modulus in a hierarchy
 	      double changeDue = ( (double)((int) Math.round((getBalance())*100)) / 100.0 );
 	      double modQuarters = ( (double)((int) Math.round((changeDue % quarter)*100)) / 100.0 );
 	      double modDimes = ( (double)((int) Math.round((modQuarters % dime)*100)) / 100.0 );
 	      double modNickels = ( (double)((int) Math.round((modQuarters % nickel)*100)) / 100.0 );
 	      
-	      // count number of coins
 	      int numQuarters = (int)((changeDue - modQuarters) / (quarter));
 	      int numDimes = (int)((modQuarters - modDimes) / (dime));
 	      int numNickels = (int)((modDimes - modNickels) / (nickel));
@@ -387,6 +379,4 @@ public class VendingMachineCLI {
 	      String total = (numQuarters + " quarter(s), " + numDimes + " dime(s), and " + numNickels + " nickel(s)");
 	      return total;
 	}	
-	
 }
-
