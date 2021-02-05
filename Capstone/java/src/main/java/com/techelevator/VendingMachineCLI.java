@@ -1,13 +1,15 @@
 package com.techelevator;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**************************************************************************************************************************
@@ -27,7 +29,28 @@ public class VendingMachineCLI {
 	
 	// Instantiate the Map of Everything.
 	Map<String,Slot> itemMap = new HashMap<String,Slot>();
+
+	// Money variables, getter, and setter.
+	private double balance;
+	private double totalSales;
 	
+	public double getBalance() {
+		return balance;
+	}
+
+	public void setBalance(double balance) {
+		this.balance = balance;
+	}
+
+	public double getTotalSales() {
+		return totalSales;
+	}
+
+	public void setTotalSales(double totalSales) {
+		this.totalSales = totalSales;
+	}
+	
+
 	private static final String MAIN_MENU_OPTION_DISPLAY_ITEMS = "Display Vending Machine Items";
 	private static final String MAIN_MENU_OPTION_PURCHASE      = "Purchase";
 	private static final String MAIN_MENU_OPTION_EXIT          = "Exit";
@@ -64,13 +87,15 @@ public class VendingMachineCLI {
 	*  should be coded
 	*
 	*  Methods should be defined following run() method and invoked from it
-	 * @throws FileNotFoundException 
+	 * @throws IOException 
 	*
 	***************************************************************************************************************************/
 	
-	public void run() throws FileNotFoundException {
+	public void run() throws IOException {
 		
 		// Sneaky sneaky, Frank.
+		// I've hijacked your naming to inject the code that I wanted to run first.
+		// Pfbtttbtbtbttbtbtbtbt.
 		
 		// Code to display items in Vending Machine
 		File checkLogFile = new File("./Log.txt");
@@ -105,10 +130,14 @@ public class VendingMachineCLI {
 		itemMap.put(slotLocation, newSlot);
 		}
 		
+		// Start with a bank balance of 0.00
+		setBalance(0);
+		setTotalSales(0);
+		
 		realRun();
 	}
 
-	public void realRun() {
+	public void realRun() throws IOException {
 
 		boolean shouldProcess = true;         // Loop control variable
 		
@@ -127,7 +156,7 @@ public class VendingMachineCLI {
 					break;                    // Exit switch statement
 					
 				case MAIN_MENU_OPTION_SALES_REPORT:
-					endMethodProcessing();    // Invoke method to perform end of method processing
+					salesReport();    // Invoke method to perform end of method processing
 					break;
 					
 				case MAIN_MENU_OPTION_EXIT:
@@ -139,28 +168,28 @@ public class VendingMachineCLI {
 		return;                               // End method and return to caller
 	}
 	
-	public void runPurchaseMenu(){
+	public void runPurchaseMenu() throws IOException{
 
 		boolean shouldProcess = true;         // Loop control variable
 		
 		while(shouldProcess) {                // Loop until user indicates they want to exit
 			
-			System.out.println("\nCurrent Money Provided: $" + "2.00"); // <----- Change to get baLANCE>
+			System.out.println("\nCurrent Money Provided: $"+String.format("%.2f", getBalance())); // <----- Change to get baLANCE>
 			
 			String choice = (String)vendingMenu.getChoiceFromOptions(PURCHASE_MENU_OPTIONS);  // Display menu and get choice
 			
 			switch(choice) {                  // Process based on user menu choice
 			
 				case PURCHASE_MENU_OPTION_FEED_MONEY:
-					displayItems();           // invoke method to display items in Vending Machine
+					feedMoney();           // invoke method to display items in Vending Machine
 					break;                    // Exit switch statement
 			
 				case PURCHASE_MENU_OPTION_SELECT_PRODUCT:
-					purchaseItems();          // invoke method to purchase items from Vending Machine
+					selectProduct();          // invoke method to purchase items from Vending Machine
 					break;                    // Exit switch statement
 					
 				case PURCHASE_MENU_OPTION_FINISH_TRANSACTION:
-					endMethodProcessing();    // Invoke method to perform end of method processing
+					finishTransaction();    // Invoke method to perform end of method processing
 					shouldProcess = false;    // Set variable to end loop
 					break;                    // Exit switch statement
 			}	
@@ -172,12 +201,13 @@ public class VendingMachineCLI {
  * @throws FileNotFoundException 
  ********************************************************************************************************/
 	public void displayItems() {   // static attribute used as method is not associated with specific object instance
+			System.out.println("");
 		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
 			System.out.println(loopy.getValue().getItemName() +"|" + loopy.getValue().getItemQuant());
 		}
 	}
 	
-	public void purchaseItems() {	 // static attribute used as method is not associated with specific object instance
+	public void purchaseItems() throws IOException {	 // static attribute used as method is not associated with specific object instance
 		// Code to purchase items from Vending Machine
 		runPurchaseMenu();
 	}
@@ -186,25 +216,181 @@ public class VendingMachineCLI {
 		// Any processing that needs to be done before method ends
 	}
 	
-	public void salesReport() {
-		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) 
-			System.out.println(loopy.getValue().getItemName() +"|" + loopy.getValue().getItemQuant());
+	public void salesReport() throws IOException {
+		String salesWriter = new SimpleDateFormat("yyyy-MM-dd-HH.mm'.txt'").format(new Date());
+		PrintWriter printItemWriter = new PrintWriter(salesWriter);
+		System.out.println("\nPrinting sales report...");
+	for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
+		printItemWriter.write((loopy.getValue().getItemName() +"|" + loopy.getValue().getItemQuant())+"\n");
+	}
+		printItemWriter.write("\n");
+		printItemWriter.write("Total Sales: $"+String.format("%.2f", getTotalSales()));
+		printItemWriter.close();
 	}
 	
 	
+	/****************
+	 * PURCHASE MENU
+	 * @throws IOException 
+	 ****************/
+	
+	@SuppressWarnings("resource") //lol
+	public void feedMoney() throws IOException {
+		System.out.println("\nPlease type how much cash your would like to insert. (Only $1, $2, $5, and $10 bills accepted.)");
+        Scanner cashScanner = new Scanner(System.in);
+        String cashMoney = cashScanner.nextLine();
+        try {
+        	int intCashMoney = Integer.parseInt(cashMoney);
+            insertMoney(intCashMoney);
+        } catch (NumberFormatException ex){  
+            System.err.println("I said ones, twos, fives and tens, ya big dumb!");	
+        }
+       }
 	
 	
+	public void selectProduct() throws IOException {
+		System.out.println("");
+		for (Map.Entry<String, Slot> loopy:itemMap.entrySet()) {
+			System.out.println(loopy.getKey()+"|"+loopy.getValue().getItemName());
+		}
+		System.out.println("\nPlease type the number and letter for the item you would like to purchase.");
+        Scanner slotScanner = new Scanner(System.in);
+        String slotSelection = slotScanner.nextLine().toUpperCase();
+		itemPurchase(slotSelection);
+	}
+
 	
-	
-	
-	
-	
+	public void finishTransaction() throws IOException {
+		
+		System.out.println("\nCHANGE DISPENSING...\n");
+		System.out.println("Your change is $"+String.format("%.2f", getBalance())+".\n");
+		System.out.println("This will be returned to you as " + returnChange()+".");
+		
+		// Instantiates the log file and flags for appended writing
+		FileWriter itemWriter = new FileWriter("./Log.txt", true);
+		PrintWriter printItemWriter = new PrintWriter(itemWriter);
+
+		printItemWriter.println(dateTime() + " GIVE CHANGE: $"+String.format("%.2f", getBalance())+" $0.00\n");
+		printItemWriter.close();
+		
+		// Change has been returned, so... 
+		setBalance(0.00);
+	}
 	
 // Methods we added ourselves that the user will never see.
-
-	// Loading the Vending Machine stock file & converting to Array/HashMap.
-
 	
+	// Date and time formatted as requested.
+	public static String dateTime() {
+		DateFormat dateFormat2 = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss aa");
+		String dateString2 = dateFormat2.format(new Date()).toString();
+		return dateString2;
+	}
+	
+	// When an item is purchased.
+	// The method for purchasing an item from the vending machine.
+	public void itemPurchase(String itemSlot) throws IOException {
+
+		// Making sure the entered slot exists.
+		if (itemMap.containsKey(itemSlot)){ //<--- This is phrased wrong, but you know what it's supposed to be.
+
+			//If you have the money...
+			if ( <= getBalance()){
+				
+				//If it's in stock...
+				if (slotLocation.itemStock() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.	
+				
+					// Instantiates the log file and flags for appended writing
+					FileWriter itemWriter = new FileWriter("./Log.txt", true);
+					PrintWriter printItemWriter = new PrintWriter(itemWriter);
+			
+				
+					// The inventory part
+					//!!!!!!!!!! DOUBLE CHECK THIS SHIT!!!!!!!!
+					itemMap.put(slotLocation, newSlot.get(newSlot.quantity()) - 1);
+							
+					
+					// Subtract the item price from the balance.
+					setBalance() = (getBalance()-itemPrice);
+							
+					// Add to total sales.
+					setTotalSales() = (getTotalSales() + itemPrice);
+					
+					//Print the transaction to the console.
+					System.out.println("Your "+itemName+" has been dispensed. It cost $"+itemPrice+". Your remaining balance is $"+getBalance()+"\n");
+				
+					//Audit Log the time, item purchased, slot #, price, and remaining balance.
+					printItemWriter.println(dateTime()+" "+itemName+" "+slotLocation+" $"+itemPrice+" $"+getBalance());
+					
+						//Response Plinko.
+						if (itemType == "chip"){
+								System.out.println("Crunch Crunch, Yum!\n");
+						}
+						if (itemType == "candy"){
+							System.out.println("Munch Munch, Yum!\n");
+						}
+						if (itemType == "drink"){
+							System.out.println("Glug Glug, Yum!\n");
+						}
+						else { 
+							System.out.println("Chew Chew, Yum!\n");
+							}
+					} else {
+					// ...it's not in stock.
+					System.out.println("That item is SOLD OUT.\n");
+					}
+				} else {
+				//...you don't have the money.
+				System.out.println("Not enough money has been inserted to make this purchase.\n");
+				}
+			// User had a stroke and typed in some bullshit.
+			System.out.println(itemSlot + " is not a valid choice. Please try again.\n");
+		}
+	}
+	
+	
+	// When money is inserted.
+	public void insertMoney(int moneyFed) throws IOException {
+		if ((moneyFed == 1) || (moneyFed == 2) || (moneyFed == 5) || (moneyFed == 10)) {
+			
+		// Instantiates the log file and flags for appended writing
+		FileWriter feedWriter = new FileWriter("./Log.txt", true);
+		PrintWriter printFeedWriter = new PrintWriter(feedWriter);
+			
+		//Add the money to the books.
+		double newBalance = (getBalance() + moneyFed);
+		setBalance(newBalance);
+		
+		//Print the time, money inserted, and new balance.
+		printFeedWriter.println(dateTime() + " FEED MONEY: $"+moneyFed+".00 $"+String.format("%.2f", getBalance()));  //New line
+		printFeedWriter.close();
+		}
+	System.out.println("Invalid dollar amount entered. Please try again.");
+	}
+	
+	
+	// Change return calculator.
+	public String returnChange() {
+
+		  double quarter = 0.25;
+	      double nickel = 0.05;
+	      double dime = 0.10;
+	      double penny = 0.01;
+	      
+
+	      double changeDue = ( (double)((int) Math.round(getBalance())*100)) / 100.0;
+	      double modQuarters = ( (double)((int) Math.round((changeDue % quarter)*100)) / 100.0 );
+	      double modDimes = ( (double)((int) Math.round((modQuarters % dime)*100)) / 100.0 );
+	      double modNickels = ( (double)((int) Math.round((modQuarters % nickel)*100)) / 100.0 );
+	      double modPennies = ( (double)((int) Math.round((modQuarters % penny)*100)) / 100.0 );
+	      
+	      int numQuarters = (int)((changeDue - modQuarters) / (quarter));
+	      int numDimes = (int)((modQuarters - modDimes) / (dime));
+	      int numNickels = (int)((modDimes - modNickels) / (nickel));
+	      int numPennies = (int)((modNickels - modPennies) / (penny));
+	      
+	      String total = (numQuarters + " quarters, " + numDimes + " dimes, and " + numNickels + " nickels");
+	      return total;
+	}
 	
 }
 
