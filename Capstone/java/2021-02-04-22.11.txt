@@ -3,7 +3,7 @@ Cola|5
 Little League Chew|5
 Moonpie|5
 Dr. Salt|5
-Chiclets|5
+Chiclets|4
 Potato Crisps|5
 Cowtales|5
 Mountain Melter|5
@@ -15,4 +15,4 @@ Grain Waves|5
 Crunchie|5
 Cloud Popcorn|5
 
-Total Sales: $0.00
+Total Sales: $0.75

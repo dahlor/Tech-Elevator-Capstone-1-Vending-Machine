@@ -97,13 +97,6 @@ public class VendingMachineCLI {
 		// I've hijacked your naming to inject the code that I wanted to run first.
 		// Pfbtttbtbtbttbtbtbtbt.
 		
-		// Code to display items in Vending Machine
-		File checkLogFile = new File("./Log.txt");
-		if (checkLogFile.exists()) {
-		checkLogFile.delete();
-		}
-		
-		
 		//Getting all that data in the system.
 		File aFile = new File("./vendingmachine.csv");
 		Scanner inputDataFile = new Scanner(aFile);
@@ -297,12 +290,7 @@ public class VendingMachineCLI {
 			if (itemMap.get(itemSlot).getNewItem().getItemPrice() <= getBalance()){
 			
 				//If it's in stock...
-				if (itemMap.get(itemSlot).getItemQuant() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.	
-				
-					// Instantiates the log file and flags for appended writing
-					FileWriter itemWriter = new FileWriter("./Log.txt", true);
-					PrintWriter printItemWriter = new PrintWriter(itemWriter);
-			
+				if (itemMap.get(itemSlot).getItemQuant() > 0) { //<--- This is phrased wrong, but you know what it's supposed to be.		
 				
 					// The inventory part
 					//!!!!!!!!!! DOUBLE CHECK THIS SHIT!!!!!!!!
@@ -315,36 +303,42 @@ public class VendingMachineCLI {
 					setBalance(balanceMath);
 							
 					// Add to total sales.
-					double calcTotalSales = getTotalSales() - itemMap.get(itemSlot).getNewItem().getItemPrice();
+					double calcTotalSales = getTotalSales() + itemMap.get(itemSlot).getNewItem().getItemPrice();
 					setTotalSales(calcTotalSales);
 					
 					//Print the transaction to the console.
-					System.out.println("Your "+ itemMap.get(itemSlot).getItemName() +" has been dispensed. It cost $"+itemMap.get(itemSlot).getNewItem().getItemPrice()+". Your remaining balance is $"+getBalance()+"\n");
+					System.out.println("\nYour "+ itemMap.get(itemSlot).getItemName() +" has been dispensed. It cost $"+String.format("%.2f", itemMap.get(itemSlot).getNewItem().getItemPrice())+". Your remaining balance is $"+String.format("%.2f", getBalance()));
 				
 					//Audit Log the time, item purchased, slot #, price, and remaining balance.
-					printItemWriter.println(dateTime()+" "+itemMap.get(itemSlot).getItemName() +" "+ itemSlot +" $"+ itemMap.get(itemSlot).getNewItem().getItemPrice() +" $"+getBalance());
+					// Instantiates the log file and flags for appended writing
+					FileWriter saleWriter = new FileWriter("./Log.txt", true);
+					PrintWriter saleItemWriter = new PrintWriter(saleWriter);
+					saleItemWriter.println(dateTime()+" "+itemMap.get(itemSlot).getItemName() +" "+itemSlot +" $"+String.format("%.2f", itemMap.get(itemSlot).getNewItem().getItemPrice())+" $"+String.format("%.2f", getBalance()));
+					saleItemWriter.close();
 					
 						//Response Plinko.
-						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Chip"){
-								System.out.println("Crunch Crunch, Yum!\n");
+						if (itemMap.get(itemSlot).getNewItem().getItemType().equals("Chip")){
+								System.out.println("\nCrunch Crunch, Yum!");
 						}
-						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Candy"){
-							System.out.println("Munch Munch, Yum!\n");
+						if (itemMap.get(itemSlot).getNewItem().getItemType().equals("Candy")){
+							System.out.println("\nMunch Munch, Yum!");
 						}
-						if (itemMap.get(itemSlot).getNewItem().getItemType() == "Drink"){
-							System.out.println("Glug Glug, Yum!\n");
+						if (itemMap.get(itemSlot).getNewItem().getItemType().equals("Drink")){
+							System.out.println("\nGlug Glug, Yum!");
 						}
-						else { 
-							System.out.println("Chew Chew, Yum!\n");
-							}
+						if (itemMap.get(itemSlot).getNewItem().getItemType().equals("Gum")){
+						System.out.println("\nChew Chew, Yum!");
+						}
+						
 					} else {
 					// ...it's not in stock.
-					System.out.println("That item is SOLD OUT.\n");
+					System.out.println("\nThat item is SOLD OUT.\n");
 					}
 				} else {
 				//...you don't have the money.
 				System.out.println("Not enough money has been inserted to make this purchase.\n");
 				}
+			} else {
 			// User had a stroke and typed in some bullshit.
 			System.out.println(itemSlot + " is not a valid choice. Please try again.\n");
 		}
@@ -374,26 +368,25 @@ public class VendingMachineCLI {
 	// Change return calculator.
 	public String returnChange() {
 
-		  double quarter = 0.25;
+	      // define variables for coins
+	      double quarter = 0.25;
 	      double nickel = 0.05;
 	      double dime = 0.10;
-	      double penny = 0.01;
 	      
-
-	      double changeDue = ( (double)((int) Math.round(getBalance())*100)) / 100.0;
+	      // round changeDue to 2 decimal places and calculate the modulus in a hierarchy
+	      double changeDue = ( (double)((int) Math.round((getBalance())*100)) / 100.0 );
 	      double modQuarters = ( (double)((int) Math.round((changeDue % quarter)*100)) / 100.0 );
 	      double modDimes = ( (double)((int) Math.round((modQuarters % dime)*100)) / 100.0 );
 	      double modNickels = ( (double)((int) Math.round((modQuarters % nickel)*100)) / 100.0 );
-	      double modPennies = ( (double)((int) Math.round((modQuarters % penny)*100)) / 100.0 );
 	      
+	      // count number of coins
 	      int numQuarters = (int)((changeDue - modQuarters) / (quarter));
 	      int numDimes = (int)((modQuarters - modDimes) / (dime));
 	      int numNickels = (int)((modDimes - modNickels) / (nickel));
-	      int numPennies = (int)((modNickels - modPennies) / (penny));
 	      
-	      String total = (numQuarters + " quarters, " + numDimes + " dimes, and " + numNickels + " nickels");
+	      String total = (numQuarters + " quarter(s), " + numDimes + " dime(s), and " + numNickels + " nickel(s)");
 	      return total;
-	}
+	}	
 	
 }
 
