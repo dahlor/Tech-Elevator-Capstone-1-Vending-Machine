@@ -1,6 +1,5 @@
 package com.techelevator;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import com.techelevator.view.Menu;   // Bring in Menu class provided
